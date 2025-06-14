@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Upload, X } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,14 +62,93 @@ export function AddListingModal({ open, onOpenChange, onListingAdded }: AddListi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create a listing.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate required fields
+    if (!formData.title.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a property title.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!formData.location.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a location.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!formData.price_per_night || parseFloat(formData.price_per_night) <= 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid price per night.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!formData.max_guests || parseInt(formData.max_guests) <= 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid number of max guests.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!formData.bedrooms || parseInt(formData.bedrooms) < 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid number of bedrooms.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!formData.bathrooms || parseFloat(formData.bathrooms) <= 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid number of bathrooms.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
     
     try {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
+      console.log('Creating listing with data:', {
+        host_id: user.id,
+        title: formData.title,
+        description: formData.description,
+        location: formData.location,
+        property_type: formData.property_type,
+        price_per_night: parseFloat(formData.price_per_night),
+        cleaning_fee: formData.cleaning_fee ? parseFloat(formData.cleaning_fee) : 0,
+        max_guests: parseInt(formData.max_guests),
+        bedrooms: parseInt(formData.bedrooms),
+        bathrooms: parseFloat(formData.bathrooms),
+        amenities: formData.amenities,
+        house_rules: formData.house_rules,
+        images: formData.images,
+        is_available: true,
+        instant_book: false
+      });
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('listings')
         .insert({
           host_id: user.id,
@@ -81,15 +160,21 @@ export function AddListingModal({ open, onOpenChange, onListingAdded }: AddListi
           cleaning_fee: formData.cleaning_fee ? parseFloat(formData.cleaning_fee) : 0,
           max_guests: parseInt(formData.max_guests),
           bedrooms: parseInt(formData.bedrooms),
-          bathrooms: parseInt(formData.bathrooms),
+          bathrooms: parseFloat(formData.bathrooms),
           amenities: formData.amenities,
           house_rules: formData.house_rules,
           images: formData.images,
           is_available: true,
           instant_book: false
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Listing created successfully:', data);
       
       toast({
         title: "Success!",
@@ -118,7 +203,7 @@ export function AddListingModal({ open, onOpenChange, onListingAdded }: AddListi
       console.error('Error creating listing:', error);
       toast({
         title: "Error",
-        description: "Failed to create listing. Please try again.",
+        description: `Failed to create listing: ${error.message || 'Unknown error'}`,
         variant: "destructive"
       });
     } finally {
@@ -245,7 +330,7 @@ export function AddListingModal({ open, onOpenChange, onListingAdded }: AddListi
               <Input
                 id="bathrooms"
                 type="number"
-                min="0"
+                min="0.5"
                 step="0.5"
                 value={formData.bathrooms}
                 onChange={(e) => setFormData(prev => ({ ...prev, bathrooms: e.target.value }))}
