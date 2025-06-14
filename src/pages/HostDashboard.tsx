@@ -31,11 +31,12 @@ const HostDashboard = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <HostSidebar activeSection={activeSection} setActiveSection={setActiveSection} />
-        <main className="flex-1 overflow-auto bg-gray-50">
-          <div className="p-6">
-            {renderContent()}
-          </div>
+        <HostSidebar 
+          activeSection={activeSection} 
+          setActiveSection={setActiveSection} 
+        />
+        <main className="flex-1 p-6 bg-gray-50">
+          {renderContent()}
         </main>
       </div>
     </SidebarProvider>

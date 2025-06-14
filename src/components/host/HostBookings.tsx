@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,68 +7,173 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle, XCircle, MessageSquare, Calendar, Users } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface Booking {
+  id: string;
+  listing_id: string;
+  user_id: string;
+  check_in_date: string;
+  check_out_date: string;
+  guests: number;
+  total_price: number;
+  status: string;
+  created_at: string;
+  listings?: {
+    title: string;
+  };
+  profiles?: {
+    username: string;
+    email: string;
+  };
+}
 
 export function HostBookings() {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [message, setMessage] = useState('');
 
-  // Mock data - in real app this would come from Supabase
-  const bookings = [
-    {
-      id: '1',
-      listingTitle: 'Cozy Mountain Cabin',
-      guestName: 'John Smith',
-      checkIn: '2024-01-15',
-      checkOut: '2024-01-18',
-      guests: 4,
-      totalPrice: 600,
-      status: 'pending'
-    },
-    {
-      id: '2',
-      listingTitle: 'Beach House Paradise',
-      guestName: 'Sarah Johnson',
-      checkIn: '2024-01-20',
-      checkOut: '2024-01-25',
-      guests: 6,
-      totalPrice: 1750,
-      status: 'confirmed'
-    },
-    {
-      id: '3',
-      listingTitle: 'Urban Loft Downtown',
-      guestName: 'Mike Wilson',
-      checkIn: '2024-01-10',
-      checkOut: '2024-01-12',
-      guests: 2,
-      totalPrice: 360,
-      status: 'cancelled'
+  useEffect(() => {
+    if (user) {
+      fetchBookings();
     }
-  ];
+  }, [user]);
 
-  const handleAcceptBooking = (bookingId: string) => {
-    toast({
-      title: "Booking Accepted",
-      description: "The booking has been confirmed and the guest has been notified.",
-    });
+  const fetchBookings = async () => {
+    try {
+      // First get all listings for this host
+      const { data: listings, error: listingsError } = await supabase
+        .from('listings')
+        .select('id')
+        .eq('host_id', user?.id);
+
+      if (listingsError) throw listingsError;
+
+      if (!listings || listings.length === 0) {
+        setBookings([]);
+        setLoading(false);
+        return;
+      }
+
+      // Then get all bookings for those listings
+      const { data: bookingsData, error: bookingsError } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          listings!inner(title),
+          profiles!inner(username, email)
+        `)
+        .in('listing_id', listings.map(l => l.id))
+        .order('created_at', { ascending: false });
+
+      if (bookingsError) throw bookingsError;
+
+      setBookings(bookingsData || []);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load bookings.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeclineBooking = (bookingId: string) => {
-    toast({
-      title: "Booking Declined",
-      description: "The booking has been declined and the guest has been notified.",
-    });
+  const handleAcceptBooking = async (bookingId: string) => {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: 'confirmed' })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+
+      setBookings(prev => prev.map(booking => 
+        booking.id === bookingId 
+          ? { ...booking, status: 'confirmed' }
+          : booking
+      ));
+
+      toast({
+        title: "Booking Accepted",
+        description: "The booking has been confirmed and the guest has been notified.",
+      });
+    } catch (error) {
+      console.error('Error accepting booking:', error);
+      toast({
+        title: "Error",
+        description: "Failed to accept booking.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleSendMessage = () => {
-    toast({
-      title: "Message Sent",
-      description: "Your message has been sent to the guest.",
-    });
-    setMessage('');
-    setShowMessageModal(false);
+  const handleDeclineBooking = async (bookingId: string) => {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: 'cancelled' })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+
+      setBookings(prev => prev.map(booking => 
+        booking.id === bookingId 
+          ? { ...booking, status: 'cancelled' }
+          : booking
+      ));
+
+      toast({
+        title: "Booking Declined",
+        description: "The booking has been declined and the guest has been notified.",
+      });
+    } catch (error) {
+      console.error('Error declining booking:', error);
+      toast({
+        title: "Error",
+        description: "Failed to decline booking.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!selectedBooking) return;
+
+    try {
+      const { error } = await supabase
+        .from('host_messages')
+        .insert({
+          booking_id: selectedBooking.id,
+          sender_id: user?.id,
+          message: message
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Message Sent",
+        description: "Your message has been sent to the guest.",
+      });
+      
+      setMessage('');
+      setShowMessageModal(false);
+      setSelectedBooking(null);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message.",
+        variant: "destructive"
+      });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -80,100 +185,126 @@ export function HostBookings() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">Booking Management</h1>
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Booking Management</h1>
 
-      <div className="space-y-4">
-        {bookings.map((booking) => (
-          <Card key={booking.id}>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg">{booking.listingTitle}</CardTitle>
-                  <p className="text-sm text-muted-foreground">Guest: {booking.guestName}</p>
+      {bookings.length === 0 ? (
+        <Card className="text-center py-12">
+          <CardContent>
+            <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No bookings yet</h3>
+            <p className="text-gray-600">Your bookings will appear here once guests start booking your properties.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {bookings.map((booking) => (
+            <Card key={booking.id}>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg">{booking.listings?.title}</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Guest: {booking.profiles?.username} ({booking.profiles?.email})
+                    </p>
+                  </div>
+                  <Badge className={getStatusColor(booking.status)}>
+                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                  </Badge>
                 </div>
-                <Badge className={getStatusColor(booking.status)}>
-                  {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                </Badge>
-              </div>
-            </CardHeader>
-            
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <div className="flex items-center space-x-2">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm">Check-in: {booking.checkIn}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm">Check-out: {booking.checkOut}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Users className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm">{booking.guests} guests</span>
-                </div>
-                <div>
-                  <span className="text-lg font-semibold">${booking.totalPrice}</span>
-                </div>
-              </div>
+              </CardHeader>
               
-              <div className="flex space-x-2">
-                {booking.status === 'pending' && (
-                  <>
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleAcceptBooking(booking.id)}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      Accept
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="destructive"
-                      onClick={() => handleDeclineBooking(booking.id)}
-                    >
-                      <XCircle className="w-4 h-4 mr-1" />
-                      Decline
-                    </Button>
-                  </>
-                )}
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm">Check-in: {new Date(booking.check_in_date).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm">Check-out: {new Date(booking.check_out_date).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Users className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm">{booking.guests} guests</span>
+                  </div>
+                  <div>
+                    <span className="text-lg font-semibold">${booking.total_price}</span>
+                  </div>
+                </div>
                 
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedBooking(booking);
-                    setShowMessageModal(true);
-                  }}
-                >
-                  <MessageSquare className="w-4 h-4 mr-1" />
-                  Message Guest
-                </Button>
-                
-                <Button size="sm" variant="outline">
-                  View Details
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                <div className="flex space-x-2">
+                  {booking.status === 'pending' && (
+                    <>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleAcceptBooking(booking.id)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Accept
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="destructive"
+                        onClick={() => handleDeclineBooking(booking.id)}
+                      >
+                        <XCircle className="w-4 h-4 mr-1" />
+                        Decline
+                      </Button>
+                    </>
+                  )}
+                  
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedBooking(booking);
+                      setShowMessageModal(true);
+                    }}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-1" />
+                    Message Guest
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Message Modal */}
       <Dialog open={showMessageModal} onOpenChange={setShowMessageModal}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Message {selectedBooking?.guestName}
+              Message {selectedBooking?.profiles?.username}
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground mb-2">
-                Booking: {selectedBooking?.listingTitle}
+                Booking: {selectedBooking?.listings?.title}
               </p>
             </div>
             
@@ -188,7 +319,7 @@ export function HostBookings() {
               <Button variant="outline" onClick={() => setShowMessageModal(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleSendMessage}>
+              <Button onClick={handleSendMessage} disabled={!message.trim()}>
                 Send Message
               </Button>
             </div>
