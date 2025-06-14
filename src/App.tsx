@@ -12,7 +12,11 @@ import { EnvironmentBanner } from "@/components/ui/environment-banner";
 import { AnalyticsProvider } from "@/components/ui/analytics";
 import { PerformanceMonitor } from "@/components/ui/performance-monitor";
 import { LazyComponentWrapper, LazyPropertyDetails, LazyHostDashboard, LazySearchResults, LazyFavoritesPage } from "@/components/ui/lazy-loading";
+import { AuthProvider } from "@/contexts/AuthContext";
+import Header from "@/components/layout/Header";
+import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -35,48 +39,56 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <PerformanceMonitor />
-            <AnalyticsProvider>
-              <EnvironmentBanner />
-              <SkipLink href="#main-content">Skip to main content</SkipLink>
-              <div id="main-content">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route 
-                    path="/search" 
-                    element={
-                      <LazyComponentWrapper>
-                        <LazySearchResults />
-                      </LazyComponentWrapper>
-                    } 
-                  />
-                  <Route 
-                    path="/property/:id" 
-                    element={
-                      <LazyComponentWrapper>
-                        <LazyPropertyDetails />
-                      </LazyComponentWrapper>
-                    } 
-                  />
-                  <Route 
-                    path="/favorites" 
-                    element={
-                      <LazyComponentWrapper>
-                        <LazyFavoritesPage />
-                      </LazyComponentWrapper>
-                    } 
-                  />
-                  <Route 
-                    path="/host" 
-                    element={
-                      <LazyComponentWrapper>
-                        <LazyHostDashboard />
-                      </LazyComponentWrapper>
-                    } 
-                  />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </div>
-            </AnalyticsProvider>
+            <AuthProvider>
+              <AnalyticsProvider>
+                <EnvironmentBanner />
+                <SkipLink href="#main-content">Skip to main content</SkipLink>
+                <Header />
+                <div id="main-content">
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route 
+                      path="/search" 
+                      element={
+                        <LazyComponentWrapper>
+                          <LazySearchResults />
+                        </LazyComponentWrapper>
+                      } 
+                    />
+                    <Route 
+                      path="/property/:id" 
+                      element={
+                        <LazyComponentWrapper>
+                          <LazyPropertyDetails />
+                        </LazyComponentWrapper>
+                      } 
+                    />
+                    <Route 
+                      path="/favorites" 
+                      element={
+                        <ProtectedRoute>
+                          <LazyComponentWrapper>
+                            <LazyFavoritesPage />
+                          </LazyComponentWrapper>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/host" 
+                      element={
+                        <ProtectedRoute>
+                          <LazyComponentWrapper>
+                            <LazyHostDashboard />
+                          </LazyComponentWrapper>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </div>
+              </AnalyticsProvider>
+            </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
