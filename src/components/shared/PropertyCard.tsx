@@ -51,7 +51,6 @@ export const PropertyCard = ({
   className = ""
 }: PropertyCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
 
   const truncateText = (text: string, maxLength: number) => {
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
@@ -70,7 +69,6 @@ export const PropertyCard = ({
             src={property.images?.[0] || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop'} 
             alt={property.title}
             className={`w-full h-full object-cover transition-all duration-700 ${isHovered ? 'scale-110' : 'scale-100'}`}
-            onLoad={() => setImageLoaded(true)}
           />
           
           {/* Gradient Overlay */}
