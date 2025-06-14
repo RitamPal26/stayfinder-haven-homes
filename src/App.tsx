@@ -31,11 +31,11 @@ const App = () => (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <AnalyticsProvider>
-            <PerformanceMonitor />
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+          <PerformanceMonitor />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AnalyticsProvider>
               <EnvironmentBanner />
               <SkipLink href="#main-content">Skip to main content</SkipLink>
               <div id="main-content">
@@ -76,8 +76,8 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
-            </BrowserRouter>
-          </AnalyticsProvider>
+            </AnalyticsProvider>
+          </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
     </HelmetProvider>
