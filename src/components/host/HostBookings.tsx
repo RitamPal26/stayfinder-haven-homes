@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle, XCircle, MessageSquare, Calendar, Users } from "lucide-react";
+import { CheckCircle, XCircle, MessageSquare, Calendar, Users, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -44,16 +45,25 @@ export function HostBookings() {
   }, [user]);
 
   const fetchBookings = async () => {
+    setLoading(true);
     try {
+      console.log('Fetching bookings for host:', user?.id);
+      
       // First get all listings for this host
       const { data: listings, error: listingsError } = await supabase
         .from('listings')
         .select('id')
         .eq('host_id', user?.id);
 
-      if (listingsError) throw listingsError;
+      if (listingsError) {
+        console.error('Error fetching listings:', listingsError);
+        throw listingsError;
+      }
+
+      console.log('Host listings:', listings);
 
       if (!listings || listings.length === 0) {
+        console.log('No listings found for host');
         setBookings([]);
         setLoading(false);
         return;
@@ -70,7 +80,12 @@ export function HostBookings() {
         .in('listing_id', listings.map(l => l.id))
         .order('created_at', { ascending: false });
 
-      if (bookingsError) throw bookingsError;
+      if (bookingsError) {
+        console.error('Error fetching bookings:', bookingsError);
+        throw bookingsError;
+      }
+
+      console.log('Raw bookings data:', bookingsData);
 
       // Transform the data to match our interface
       const transformedBookings: Booking[] = (bookingsData || []).map(booking => ({
@@ -78,16 +93,17 @@ export function HostBookings() {
         listings: booking.listings ? { title: booking.listings.title } : undefined,
         profiles: booking.profiles ? { 
           username: booking.profiles.username,
-          email: booking.profiles.username // Using username as fallback for email
+          email: booking.profiles.username
         } : undefined
       }));
 
+      console.log('Transformed bookings:', transformedBookings);
       setBookings(transformedBookings);
     } catch (error) {
       console.error('Error fetching bookings:', error);
       toast({
         title: "Error",
-        description: "Failed to load bookings.",
+        description: "Failed to load bookings. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -97,12 +113,17 @@ export function HostBookings() {
 
   const handleAcceptBooking = async (bookingId: string) => {
     try {
+      console.log('Accepting booking:', bookingId);
+      
       const { error } = await supabase
         .from('bookings')
         .update({ status: 'confirmed' })
         .eq('id', bookingId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error accepting booking:', error);
+        throw error;
+      }
 
       setBookings(prev => prev.map(booking => 
         booking.id === bookingId 
@@ -126,12 +147,17 @@ export function HostBookings() {
 
   const handleDeclineBooking = async (bookingId: string) => {
     try {
+      console.log('Declining booking:', bookingId);
+      
       const { error } = await supabase
         .from('bookings')
         .update({ status: 'cancelled' })
         .eq('id', bookingId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error declining booking:', error);
+        throw error;
+      }
 
       setBookings(prev => prev.map(booking => 
         booking.id === bookingId 
@@ -197,7 +223,13 @@ export function HostBookings() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Booking Management</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Booking Management</h1>
+          <Button variant="outline" disabled>
+            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+            Loading...
+          </Button>
+        </div>
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="animate-pulse">
@@ -214,7 +246,13 @@ export function HostBookings() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Booking Management</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Booking Management</h1>
+        <Button variant="outline" onClick={fetchBookings}>
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
 
       {bookings.length === 0 ? (
         <Card className="text-center py-12">
@@ -222,6 +260,10 @@ export function HostBookings() {
             <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No bookings yet</h3>
             <p className="text-gray-600">Your bookings will appear here once guests start booking your properties.</p>
+            <Button variant="outline" onClick={fetchBookings} className="mt-4">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Check for new bookings
+            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -233,7 +275,7 @@ export function HostBookings() {
                   <div>
                     <CardTitle className="text-lg">{booking.listings?.title || 'Unknown Property'}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Guest: {booking.profiles?.username || 'Unknown Guest'} ({booking.profiles?.email || 'No email'})
+                      Guest: {booking.profiles?.username || 'Unknown Guest'}
                     </p>
                   </div>
                   <Badge className={getStatusColor(booking.status)}>
