@@ -8,11 +8,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
 import ErrorBoundary from "@/components/ui/error-boundary";
 import { SkipLink } from "@/components/ui/accessibility";
+import { EnvironmentBanner } from "@/components/ui/environment-banner";
+import { AnalyticsProvider } from "@/components/ui/analytics";
+import { PerformanceMonitor } from "@/components/ui/performance-monitor";
+import { LazyComponentWrapper, LazyPropertyDetails, LazyHostDashboard, LazySearchResults, LazyFavoritesPage } from "@/components/ui/lazy-loading";
 import Index from "./pages/Index";
-import PropertyDetails from "./pages/PropertyDetails";
-import HostDashboard from "./pages/HostDashboard";
-import SearchResults from "./pages/SearchResults";
-import { FavoritesPage } from "./components/favorites/FavoritesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -31,21 +31,53 @@ const App = () => (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <SkipLink href="#main-content">Skip to main content</SkipLink>
-            <div id="main-content">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/search" element={<SearchResults />} />
-                <Route path="/property/:id" element={<PropertyDetails />} />
-                <Route path="/favorites" element={<FavoritesPage />} />
-                <Route path="/host" element={<HostDashboard />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
-          </BrowserRouter>
+          <AnalyticsProvider>
+            <PerformanceMonitor />
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <EnvironmentBanner />
+              <SkipLink href="#main-content">Skip to main content</SkipLink>
+              <div id="main-content">
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route 
+                    path="/search" 
+                    element={
+                      <LazyComponentWrapper>
+                        <LazySearchResults />
+                      </LazyComponentWrapper>
+                    } 
+                  />
+                  <Route 
+                    path="/property/:id" 
+                    element={
+                      <LazyComponentWrapper>
+                        <LazyPropertyDetails />
+                      </LazyComponentWrapper>
+                    } 
+                  />
+                  <Route 
+                    path="/favorites" 
+                    element={
+                      <LazyComponentWrapper>
+                        <LazyFavoritesPage />
+                      </LazyComponentWrapper>
+                    } 
+                  />
+                  <Route 
+                    path="/host" 
+                    element={
+                      <LazyComponentWrapper>
+                        <LazyHostDashboard />
+                      </LazyComponentWrapper>
+                    } 
+                  />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
+            </BrowserRouter>
+          </AnalyticsProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </HelmetProvider>
