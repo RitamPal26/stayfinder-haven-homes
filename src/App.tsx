@@ -31,10 +31,10 @@ const App = () => (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <PerformanceMonitor />
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <PerformanceMonitor />
             <AnalyticsProvider>
               <EnvironmentBanner />
               <SkipLink href="#main-content">Skip to main content</SkipLink>
