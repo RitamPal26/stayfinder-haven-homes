@@ -108,6 +108,42 @@ export type Database = {
           },
         ]
       }
+      favorites: {
+        Row: {
+          created_at: string | null
+          id: string
+          listing_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          listing_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          listing_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       host_messages: {
         Row: {
           booking_id: string
@@ -159,10 +195,14 @@ export type Database = {
           house_rules: string | null
           id: string
           images: string[] | null
+          instant_book: boolean | null
           is_available: boolean | null
+          latitude: number | null
           location: string
+          longitude: number | null
           max_guests: number | null
           price_per_night: number
+          property_type: string | null
           title: string
           updated_at: string | null
         }
@@ -177,10 +217,14 @@ export type Database = {
           house_rules?: string | null
           id?: string
           images?: string[] | null
+          instant_book?: boolean | null
           is_available?: boolean | null
+          latitude?: number | null
           location: string
+          longitude?: number | null
           max_guests?: number | null
           price_per_night: number
+          property_type?: string | null
           title: string
           updated_at?: string | null
         }
@@ -195,10 +239,14 @@ export type Database = {
           house_rules?: string | null
           id?: string
           images?: string[] | null
+          instant_book?: boolean | null
           is_available?: boolean | null
+          latitude?: number | null
           location?: string
+          longitude?: number | null
           max_guests?: number | null
           price_per_night?: number
+          property_type?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -303,6 +351,71 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      }
+      property_comparisons: {
+        Row: {
+          created_at: string | null
+          id: string
+          listing_ids: string[]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          listing_ids: string[]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          listing_ids?: string[]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_comparisons_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recently_viewed: {
+        Row: {
+          id: string
+          listing_id: string
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          listing_id: string
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          listing_id?: string
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recently_viewed_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recently_viewed_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {

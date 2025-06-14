@@ -1,9 +1,9 @@
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, MapPin, Calendar, Users, Star, Wifi, Car, Coffee } from "lucide-react";
+import { Star, MapPin, Wifi, Car, Coffee } from "lucide-react";
 import { Link } from "react-router-dom";
+import { EnhancedSearchBar } from "@/components/search/EnhancedSearchBar";
 
 const Index = () => {
   const featuredProperties = [
@@ -58,6 +58,9 @@ const Index = () => {
               <h1 className="text-2xl font-bold text-primary">StayFinder</h1>
             </div>
             <nav className="flex items-center space-x-4">
+              <Link to="/favorites">
+                <Button variant="ghost">Favorites</Button>
+              </Link>
               <Link to="/host">
                 <Button variant="ghost">Become a Host</Button>
               </Link>
@@ -78,47 +81,8 @@ const Index = () => {
             Discover unique places to stay around the world
           </p>
           
-          {/* Search Form */}
-          <Card className="p-6 shadow-lg">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Where</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input placeholder="Destination" className="pl-10" />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Check-in</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input type="date" className="pl-10" />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Check-out</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input type="date" className="pl-10" />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Guests</label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input placeholder="2 guests" className="pl-10" />
-                </div>
-              </div>
-            </div>
-            
-            <Button className="w-full mt-6" size="lg">
-              <Search className="w-4 h-4 mr-2" />
-              Search
-            </Button>
-          </Card>
+          {/* Enhanced Search Form */}
+          <EnhancedSearchBar />
         </div>
       </section>
 
