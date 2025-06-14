@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle, XCircle, MessageSquare, Calendar, Users } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -25,7 +24,7 @@ interface Booking {
   };
   profiles?: {
     username: string;
-    email: string;
+    email?: string;
   };
 }
 
@@ -60,20 +59,30 @@ export function HostBookings() {
         return;
       }
 
-      // Then get all bookings for those listings
+      // Then get all bookings for those listings with proper joins
       const { data: bookingsData, error: bookingsError } = await supabase
         .from('bookings')
         .select(`
           *,
-          listings!inner(title),
-          profiles!inner(username, email)
+          listings(title),
+          profiles(username)
         `)
         .in('listing_id', listings.map(l => l.id))
         .order('created_at', { ascending: false });
 
       if (bookingsError) throw bookingsError;
 
-      setBookings(bookingsData || []);
+      // Transform the data to match our interface
+      const transformedBookings: Booking[] = (bookingsData || []).map(booking => ({
+        ...booking,
+        listings: booking.listings ? { title: booking.listings.title } : undefined,
+        profiles: booking.profiles ? { 
+          username: booking.profiles.username,
+          email: booking.profiles.username // Using username as fallback for email
+        } : undefined
+      }));
+
+      setBookings(transformedBookings);
     } catch (error) {
       console.error('Error fetching bookings:', error);
       toast({
@@ -222,9 +231,9 @@ export function HostBookings() {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-lg">{booking.listings?.title}</CardTitle>
+                    <CardTitle className="text-lg">{booking.listings?.title || 'Unknown Property'}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Guest: {booking.profiles?.username} ({booking.profiles?.email})
+                      Guest: {booking.profiles?.username || 'Unknown Guest'} ({booking.profiles?.email || 'No email'})
                     </p>
                   </div>
                   <Badge className={getStatusColor(booking.status)}>
@@ -297,14 +306,14 @@ export function HostBookings() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Message {selectedBooking?.profiles?.username}
+              Message {selectedBooking?.profiles?.username || 'Guest'}
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground mb-2">
-                Booking: {selectedBooking?.listings?.title}
+                Booking: {selectedBooking?.listings?.title || 'Unknown Property'}
               </p>
             </div>
             

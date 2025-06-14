@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Eye, ToggleLeft, ToggleRight } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, ToggleLeft, ToggleRight, Home } from "lucide-react";
 import { AddListingModal } from "./AddListingModal";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
