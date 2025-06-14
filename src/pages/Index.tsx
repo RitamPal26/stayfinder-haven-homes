@@ -1,6 +1,6 @@
-
 import { useState } from "react";
 import { Search, Heart, Star, Users, Calendar, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -102,7 +102,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-[#FF5A5F]">StayFinder</h1>
+              <Link to="/" className="text-2xl font-bold text-[#FF5A5F]">StayFinder</Link>
             </div>
             <div className="hidden md:flex items-center space-x-4">
               <Button variant="ghost" className="text-gray-700 hover:text-[#FF5A5F]">
@@ -219,50 +219,55 @@ const Index = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {properties.map((property) => (
-              <Card key={property.id} className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                <div className="relative">
-                  <img 
-                    src={property.image} 
-                    alt={property.title}
-                    className="w-full h-48 object-cover"
-                  />
-                  <button
-                    onClick={() => toggleFavorite(property.id)}
-                    className="absolute top-3 right-3 p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
-                  >
-                    <Heart 
-                      className={`h-4 w-4 ${
-                        favorites.includes(property.id) 
-                          ? 'fill-[#FF5A5F] text-[#FF5A5F]' 
-                          : 'text-gray-600'
-                      }`} 
+              <Link to={`/property/${property.id}`} key={property.id}>
+                <Card className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <div className="relative">
+                    <img 
+                      src={property.image} 
+                      alt={property.title}
+                      className="w-full h-48 object-cover"
                     />
-                  </button>
-                </div>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-semibold text-gray-900 text-sm leading-tight">
-                      {property.title}
-                    </h4>
-                    <div className="flex items-center ml-2">
-                      <Star className="h-3 w-3 fill-current text-yellow-400" />
-                      <span className="text-xs font-medium text-gray-700 ml-1">
-                        {property.rating}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleFavorite(property.id);
+                      }}
+                      className="absolute top-3 right-3 p-2 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-colors"
+                    >
+                      <Heart 
+                        className={`h-4 w-4 ${
+                          favorites.includes(property.id) 
+                            ? 'fill-[#FF5A5F] text-[#FF5A5F]' 
+                            : 'text-gray-600'
+                        }`} 
+                      />
+                    </button>
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-semibold text-gray-900 text-sm leading-tight">
+                        {property.title}
+                      </h4>
+                      <div className="flex items-center ml-2">
+                        <Star className="h-3 w-3 fill-current text-yellow-400" />
+                        <span className="text-xs font-medium text-gray-700 ml-1">
+                          {property.rating}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-gray-500 text-xs mb-3">{property.location}</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-bold text-gray-900">₹{property.price.toLocaleString()}</span>
+                        <span className="text-gray-500 text-sm"> night</span>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {property.reviews} reviews
                       </span>
                     </div>
-                  </div>
-                  <p className="text-gray-500 text-xs mb-3">{property.location}</p>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="font-bold text-gray-900">₹{property.price.toLocaleString()}</span>
-                      <span className="text-gray-500 text-sm"> night</span>
-                    </div>
-                    <span className="text-xs text-gray-500">
-                      {property.reviews} reviews
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>
