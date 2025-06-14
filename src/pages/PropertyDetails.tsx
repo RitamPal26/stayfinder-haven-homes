@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Listing {
   id: string;
@@ -142,24 +141,8 @@ const PropertyDetails = () => {
 
     setIsBooking(true);
     try {
-      const totalGuests = adults + children + infants;
-      const { total } = calculateTotal();
-
-      // Create booking in Supabase (when authentication is implemented)
-      const { error } = await supabase
-        .from('bookings')
-        .insert([
-          {
-            listing_id: listing?.id,
-            check_in_date: checkIn,
-            check_out_date: checkOut,
-            guests: totalGuests,
-            total_price: total,
-            status: 'pending'
-          }
-        ]);
-
-      if (error) throw error;
+      // Simulate booking process - in real implementation this would save to database
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       toast({
         title: "Booking Confirmed!",
