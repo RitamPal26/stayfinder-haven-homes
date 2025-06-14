@@ -8,7 +8,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Badge } from "@/components/ui/badge";
 import { Filter, Map, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import Header from "@/components/layout/Header";
+import { Footer } from "@/components/Footer";
 
 const SearchResultsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,71 +33,53 @@ const SearchResultsPage = () => {
   const [comparisonList, setComparisonList] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Sample data for demonstration
-  const sampleProperties = [
-    {
-      id: '1',
-      title: 'Luxury Beachfront Villa',
-      location: 'Goa, India',
-      price_per_night: 450,
-      images: ['https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=800&h=600&fit=crop'],
-      property_type: 'villa',
-      max_guests: 8,
-      bedrooms: 4,
-      bathrooms: 3,
-      amenities: ['WiFi', 'Pool', 'Beach Access', 'Kitchen'],
-      instant_book: true,
-      rating: 4.9,
-      reviews: 127,
-      is_favorited: false
-    },
-    {
-      id: '2',
-      title: 'Modern Downtown Apartment',
-      location: 'Mumbai, India',
-      price_per_night: 180,
-      images: ['https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&h=600&fit=crop'],
-      property_type: 'apartment',
-      max_guests: 4,
-      bedrooms: 2,
-      bathrooms: 2,
-      amenities: ['WiFi', 'Kitchen', 'Parking', 'Air Conditioning'],
-      instant_book: false,
-      rating: 4.7,
-      reviews: 89,
-      is_favorited: true
-    },
-    {
-      id: '3',
-      title: 'Cozy Mountain Cottage',
-      location: 'Manali, India',
-      price_per_night: 120,
-      images: ['https://images.unsplash.com/photo-1472396961693-142e6e269027?w=800&h=600&fit=crop'],
-      property_type: 'house',
-      max_guests: 6,
-      bedrooms: 3,
-      bathrooms: 2,
-      amenities: ['WiFi', 'Fireplace', 'Kitchen', 'Garden'],
-      instant_book: true,
-      rating: 4.8,
-      reviews: 156,
-      is_favorited: false
-    }
-  ];
-
   useEffect(() => {
     searchProperties();
-  }, []);
+  }, [filters]);
 
   const searchProperties = async () => {
     setLoading(true);
     try {
-      // For demo, using sample data
-      // In production, this would query Supabase with filters
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      setProperties(sampleProperties);
-      setTotalCount(sampleProperties.length);
+      let query = supabase
+        .from('listings')
+        .select('*')
+        .eq('is_available', true);
+
+      // Apply location filter
+      if (filters.location) {
+        query = query.ilike('location', `%${filters.location}%`);
+      }
+
+      // Apply guest filter
+      if (filters.guests > 1) {
+        query = query.gte('max_guests', filters.guests);
+      }
+
+      // Apply price range filter
+      if (filters.priceRange[0] > 0 || filters.priceRange[1] < 1000) {
+        query = query
+          .gte('price_per_night', filters.priceRange[0])
+          .lte('price_per_night', filters.priceRange[1]);
+      }
+
+      // Apply property types filter
+      if (filters.propertyTypes.length > 0) {
+        query = query.in('property_type', filters.propertyTypes);
+      }
+
+      // Apply instant book filter
+      if (filters.instantBook) {
+        query = query.eq('instant_book', true);
+      }
+
+      const { data, error, count } = await query.limit(20);
+
+      if (error) throw error;
+
+      setProperties(data || []);
+      setTotalCount(count || 0);
     } catch (error) {
+      console.error('Error searching properties:', error);
       toast({
         title: "Search Error",
         description: "Failed to search properties. Please try again.",
@@ -125,16 +109,60 @@ const SearchResultsPage = () => {
 
   const handleToggleFavorite = async (propertyId: string) => {
     try {
-      // In production, this would toggle favorite in Supabase
-      setProperties(prev => prev.map(p => 
-        p.id === propertyId ? { ...p, is_favorited: !p.is_favorited } : p
-      ));
-      
-      toast({
-        title: "Favorite Updated",
-        description: "Property has been added to your favorites.",
-      });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to add favorites.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Check if already favorited
+      const { data: existingFavorite } = await supabase
+        .from('favorites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('listing_id', propertyId)
+        .single();
+
+      if (existingFavorite) {
+        // Remove from favorites
+        await supabase
+          .from('favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('listing_id', propertyId);
+        
+        setProperties(prev => prev.map(p => 
+          p.id === propertyId ? { ...p, is_favorited: false } : p
+        ));
+        
+        toast({
+          title: "Removed from Favorites",
+          description: "Property has been removed from your favorites.",
+        });
+      } else {
+        // Add to favorites
+        await supabase
+          .from('favorites')
+          .insert({
+            user_id: user.id,
+            listing_id: propertyId
+          });
+        
+        setProperties(prev => prev.map(p => 
+          p.id === propertyId ? { ...p, is_favorited: true } : p
+        ));
+        
+        toast({
+          title: "Added to Favorites",
+          description: "Property has been added to your favorites.",
+        });
+      }
     } catch (error) {
+      console.error('Error toggling favorite:', error);
       toast({
         title: "Error",
         description: "Failed to update favorite. Please try again.",
@@ -174,20 +202,7 @@ const SearchResultsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-primary">StayFinder</h1>
-            </div>
-            <nav className="flex items-center space-x-4">
-              <Button variant="ghost">Sign In</Button>
-              <Button>Sign Up</Button>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex gap-6">
@@ -273,6 +288,8 @@ const SearchResultsPage = () => {
           </div>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 };
