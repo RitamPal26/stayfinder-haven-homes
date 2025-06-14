@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, MapPin, Star, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { PropertyCard } from '@/components/shared/PropertyCard';
+import { PropertyCardSkeleton } from '@/components/ui/loading-skeleton';
 
 interface Property {
   id: string;
@@ -136,13 +136,7 @@ export const FeaturedListings = () => {
         <h2 className="text-3xl font-bold text-center mb-8">Featured Listings</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <div className="aspect-[4/3] bg-gray-200 rounded-t-lg"></div>
-              <CardContent className="p-4">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-              </CardContent>
-            </Card>
+            <PropertyCardSkeleton key={i} />
           ))}
         </div>
       </div>
@@ -170,77 +164,11 @@ export const FeaturedListings = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {properties.map((property) => (
-          <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-            <div className="relative">
-              <div className="aspect-[4/3] bg-gray-200">
-                <img 
-                  src={property.images[0]} 
-                  alt={property.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              
-              {/* Favorite Button */}
-              <button
-                onClick={() => handleToggleFavorite(property.id)}
-                className="absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
-              >
-                <Heart 
-                  className={`w-5 h-5 ${property.is_favorited ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
-                />
-              </button>
-            </div>
-
-            <CardContent className="p-4">
-              <div className="space-y-2">
-                {/* Title and Location */}
-                <div>
-                  <Link to={`/property/${property.id}`}>
-                    <h3 className="font-semibold text-lg hover:text-primary transition-colors">
-                      {property.title}
-                    </h3>
-                  </Link>
-                  <div className="flex items-center text-gray-600 text-sm">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    {property.location}
-                  </div>
-                </div>
-
-                {/* Property Details */}
-                <div className="flex items-center text-sm text-gray-600 space-x-4">
-                  <span className="capitalize">{property.property_type}</span>
-                  <span>•</span>
-                  <div className="flex items-center">
-                    <Users className="w-4 h-4 mr-1" />
-                    {property.max_guests} guests
-                  </div>
-                  <span>•</span>
-                  <span>{property.bedrooms} bed</span>
-                </div>
-
-                {/* Rating and Price */}
-                <div className="flex justify-between items-center pt-2">
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 mr-1" />
-                    <span className="text-sm font-medium">{property.rating?.toFixed(1)}</span>
-                    <span className="text-sm text-gray-500 ml-1">({property.reviews})</span>
-                  </div>
-                  
-                  <div className="text-right">
-                    <span className="text-xl font-bold">${property.price_per_night}</span>
-                    <span className="text-gray-500 text-sm"> / night</span>
-                  </div>
-                </div>
-
-                {/* View Details Button */}
-                <Link to={`/property/${property.id}`} className="block pt-2">
-                  <Button className="w-full">
-                    View Details
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+          <PropertyCard
+            key={property.id}
+            property={property}
+            onToggleFavorite={handleToggleFavorite}
+          />
         ))}
       </div>
 
