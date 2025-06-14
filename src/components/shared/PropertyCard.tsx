@@ -55,11 +55,11 @@ export const PropertyCard = ({
   };
 
   return (
-    <Card className={`overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col ${className}`}>
+    <Card className={`overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col bg-white ${className}`}>
       <div className="relative">
         <div className="aspect-[4/3] overflow-hidden">
           <OptimizedImage 
-            src={property.images[0]} 
+            src={property.images?.[0] || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop'} 
             alt={property.title}
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
           />
@@ -68,7 +68,7 @@ export const PropertyCard = ({
         {/* Overlay Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1">
           {property.instant_book && (
-            <Badge className="bg-green-600 text-white text-xs">Instant Book</Badge>
+            <Badge className="bg-green-600 text-white text-xs px-2 py-1">Instant Book</Badge>
           )}
         </div>
         
@@ -88,24 +88,24 @@ export const PropertyCard = ({
           {/* Title and Location */}
           <div>
             <Link to={`/property/${property.id}`}>
-              <h3 className="font-semibold text-lg leading-tight hover:text-primary transition-colors line-clamp-2">
+              <h3 className="font-semibold text-lg leading-tight hover:text-primary transition-colors line-clamp-2 mb-1">
                 {truncateText(property.title, 60)}
               </h3>
             </Link>
-            <div className="flex items-center text-gray-600 text-sm mt-1">
+            <div className="flex items-center text-gray-600 text-sm">
               <MapPin className="w-3 h-3 mr-1 flex-shrink-0" />
               <span className="truncate">{property.location}</span>
             </div>
           </div>
 
           {/* Property Details */}
-          <div className="flex items-center text-sm text-gray-600 flex-wrap gap-x-2 gap-y-1">
-            <span className="capitalize bg-gray-100 px-2 py-1 rounded text-xs">
+          <div className="flex items-center text-sm text-gray-600 flex-wrap gap-x-3 gap-y-1">
+            <span className="capitalize bg-gray-100 px-2 py-1 rounded-full text-xs font-medium">
               {property.property_type}
             </span>
             <div className="flex items-center">
               <Users className="w-3 h-3 mr-1" />
-              <span>{property.max_guests}</span>
+              <span>{property.max_guests} guests</span>
             </div>
             <span>•</span>
             <span>{property.bedrooms} bed</span>
@@ -115,19 +115,19 @@ export const PropertyCard = ({
 
           {/* Amenities */}
           <div className="flex items-center gap-3 overflow-hidden">
-            {property.amenities.slice(0, 3).map((amenity, index) => (
+            {property.amenities?.slice(0, 3).map((amenity, index) => (
               <div key={index} className="flex items-center text-gray-500 text-xs">
                 {getAmenityIcon(amenity)}
-                <span className="ml-1 hidden sm:inline">{amenity}</span>
+                <span className="ml-1 hidden sm:inline capitalize">{amenity}</span>
               </div>
             ))}
-            {property.amenities.length > 3 && (
+            {property.amenities && property.amenities.length > 3 && (
               <span className="text-xs text-gray-500">+{property.amenities.length - 3}</span>
             )}
           </div>
 
           {/* Rating and Price */}
-          <div className="flex justify-between items-center pt-2">
+          <div className="flex justify-between items-center pt-2 border-t border-gray-100">
             <div className="flex items-center">
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 mr-1" />
               <span className="text-sm font-medium">{property.rating?.toFixed(1) || '4.5'}</span>
@@ -135,7 +135,7 @@ export const PropertyCard = ({
             </div>
             
             <div className="text-right">
-              <span className="text-xl font-bold">${property.price_per_night}</span>
+              <span className="text-xl font-bold text-gray-900">${property.price_per_night}</span>
               <span className="text-gray-500 text-sm"> / night</span>
             </div>
           </div>

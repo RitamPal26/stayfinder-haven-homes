@@ -2,14 +2,28 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const PropertyCardSkeleton = () => (
-  <div className="border rounded-lg overflow-hidden">
-    <Skeleton className="h-48 w-full" />
+  <div className="border rounded-lg overflow-hidden bg-white">
+    <Skeleton className="aspect-[4/3] w-full" />
     <div className="p-4 space-y-3">
-      <Skeleton className="h-4 w-3/4" />
-      <Skeleton className="h-3 w-1/2" />
-      <div className="flex justify-between items-center">
-        <Skeleton className="h-3 w-1/3" />
-        <Skeleton className="h-4 w-1/4" />
+      <div className="space-y-2">
+        <Skeleton className="h-5 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+      </div>
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-6 w-16 rounded-full" />
+        <Skeleton className="h-4 w-20" />
+      </div>
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-4 w-4 rounded" />
+        <Skeleton className="h-4 w-4 rounded" />
+        <Skeleton className="h-4 w-4 rounded" />
+      </div>
+      <div className="flex justify-between items-center pt-2 border-t">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-6 w-20" />
+      </div>
+      <div className="flex gap-2 pt-2">
+        <Skeleton className="h-8 flex-1" />
       </div>
     </div>
   </div>

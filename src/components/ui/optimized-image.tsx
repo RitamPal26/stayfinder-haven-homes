@@ -15,7 +15,7 @@ export const OptimizedImage = ({
   src, 
   alt, 
   className, 
-  fallbackSrc = 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop'
+  fallbackSrc = 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop&crop=center'
 }: OptimizedImageProps) => {
   const { isLoaded, hasError, optimizedSrc } = useImageOptimization({ src, alt });
   const [showFallback, setShowFallback] = useState(false);
