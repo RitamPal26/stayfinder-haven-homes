@@ -33,6 +33,7 @@ interface Listing {
   amenities: string[];
   images: string[];
   host_id: string;
+  instant_book?: boolean | null;
   profiles?: {
     username: string;
   };
