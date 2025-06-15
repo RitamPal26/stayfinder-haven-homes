@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -46,6 +45,62 @@ export function AddListingModal({ open, onOpenChange, onListingAdded }: AddListi
     images: ['/placeholder.svg'] as string[],
     instant_book: false
   });
+
+  // Image Upload State and Functions
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState('');
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || !user) return;
+
+    setImageUploadError('');
+    setImageUploading(true);
+    let uploadedUrls: string[] = [];
+
+    for (const file of files) {
+      const ext = file.name.split('.').pop();
+      const filePath = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const { data, error } = await supabase.storage
+        .from('listing-images')
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (error) {
+        setImageUploadError(error.message);
+        setImageUploading(false);
+        return;
+      }
+
+      // Make public URL
+      const publicUrl = supabase.storage.from('listing-images').getPublicUrl(filePath).data.publicUrl;
+      if (publicUrl) {
+        uploadedUrls.push(publicUrl);
+      }
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      images: [
+        ...prev.images.filter((i) => i !== '/placeholder.svg'),
+        ...uploadedUrls,
+      ],
+    }));
+
+    setImageUploading(false);
+    // Reset input so the same file can be uploaded again if needed
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleRemoveImage = (url: string) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter(img => img !== url)
+    }));
+  };
 
   const handleAmenityChange = (amenity: string, checked: boolean) => {
     if (checked) {
@@ -203,6 +258,54 @@ export function AddListingModal({ open, onOpenChange, onListingAdded }: AddListi
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* --- Image Upload Section --- */}
+          <div>
+            <Label>Photos</Label>
+            <div className="flex flex-wrap gap-4 mt-2">
+              {formData.images.filter(img => img !== '/placeholder.svg').map((img, idx) => (
+                <div key={img + idx} className="relative w-28 h-20 rounded overflow-hidden border bg-gray-100 flex items-center justify-center shadow-sm">
+                  <img src={img} alt={`Property photo ${idx + 1}`} className="object-cover w-full h-full" />
+                  <button
+                    type="button"
+                    className="absolute top-1 right-1 bg-black/50 rounded-full p-1 text-white hover:bg-black"
+                    onClick={() => handleRemoveImage(img)}
+                    aria-label="Remove"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              {/* Add Image button */}
+              <button
+                type="button"
+                className="w-28 h-20 bg-gray-200 border border-dashed border-gray-400 flex items-center justify-center rounded transition hover:border-[#FF5A5F]"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={imageUploading}
+                aria-label="Add Image"
+              >
+                <Upload className="w-7 h-7 text-gray-600" />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                tabIndex={-1}
+                onChange={handleFileChange}
+              />
+            </div>
+            {imageUploading && (
+              <p className="text-sm text-muted-foreground mt-2">Uploading...</p>
+            )}
+            {imageUploadError && (
+              <p className="text-sm text-destructive mt-2">{imageUploadError}</p>
+            )}
+            {formData.images.length === 0 && !imageUploading && (
+              <p className="text-sm text-muted-foreground mt-2">Upload at least 1 photo.</p>
+            )}
+          </div>
+
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
