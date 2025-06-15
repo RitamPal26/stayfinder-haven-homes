@@ -43,7 +43,8 @@ export function AddListingModal({ open, onOpenChange, onListingAdded }: AddListi
     bathrooms: '',
     amenities: [] as string[],
     house_rules: '',
-    images: ['/placeholder.svg'] as string[]
+    images: ['/placeholder.svg'] as string[],
+    instant_book: false
   });
 
   const handleAmenityChange = (amenity: string, checked: boolean) => {
@@ -130,24 +131,6 @@ export function AddListingModal({ open, onOpenChange, onListingAdded }: AddListi
     setLoading(true);
     
     try {
-      console.log('Creating listing with data:', {
-        host_id: user.id,
-        title: formData.title,
-        description: formData.description,
-        location: formData.location,
-        property_type: formData.property_type,
-        price_per_night: parseFloat(formData.price_per_night),
-        cleaning_fee: formData.cleaning_fee ? parseFloat(formData.cleaning_fee) : 0,
-        max_guests: parseInt(formData.max_guests),
-        bedrooms: parseInt(formData.bedrooms),
-        bathrooms: parseFloat(formData.bathrooms),
-        amenities: formData.amenities,
-        house_rules: formData.house_rules,
-        images: formData.images,
-        is_available: true,
-        instant_book: false
-      });
-
       const { data, error } = await supabase
         .from('listings')
         .insert({
@@ -165,7 +148,7 @@ export function AddListingModal({ open, onOpenChange, onListingAdded }: AddListi
           house_rules: formData.house_rules,
           images: formData.images,
           is_available: true,
-          instant_book: false
+          instant_book: formData.instant_book
         })
         .select();
 
@@ -197,7 +180,8 @@ export function AddListingModal({ open, onOpenChange, onListingAdded }: AddListi
         bathrooms: '',
         amenities: [],
         house_rules: '',
-        images: ['/placeholder.svg']
+        images: ['/placeholder.svg'],
+        instant_book: false
       });
     } catch (error) {
       console.error('Error creating listing:', error);
@@ -353,6 +337,23 @@ export function AddListingModal({ open, onOpenChange, onListingAdded }: AddListi
                   <Label htmlFor={amenity} className="text-sm">{amenity}</Label>
                 </div>
               ))}
+            </div>
+          </div>
+          
+          {/* Instant Booking */}
+          <div className="flex items-center space-x-3 rounded-md border p-4">
+            <Checkbox
+              id="instant_book"
+              checked={formData.instant_book}
+              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, instant_book: checked as boolean }))}
+            />
+            <div className="grid gap-1.5 leading-none">
+              <Label htmlFor="instant_book" className="font-medium">
+                Enable Instant Booking
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Guests can book your property without needing your approval.
+              </p>
             </div>
           </div>
 

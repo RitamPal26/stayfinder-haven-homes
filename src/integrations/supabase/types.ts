@@ -16,6 +16,7 @@ export type Database = {
           created_at: string | null
           guests: number
           id: string
+          is_instant: boolean
           listing_id: string
           status: string | null
           total_price: number
@@ -27,6 +28,7 @@ export type Database = {
           created_at?: string | null
           guests: number
           id?: string
+          is_instant?: boolean
           listing_id: string
           status?: string | null
           total_price: number
@@ -38,6 +40,7 @@ export type Database = {
           created_at?: string | null
           guests?: number
           id?: string
+          is_instant?: boolean
           listing_id?: string
           status?: string | null
           total_price?: number

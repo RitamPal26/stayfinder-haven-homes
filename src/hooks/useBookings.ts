@@ -3,13 +3,14 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { Database } from '@/integrations/supabase/types';
 
-interface BookingData {
-  listing_id: string;
-  check_in_date: string;
-  check_out_date: string;
-  guests: number;
-  total_price: number;
+type BookingData = Omit<Database['public']['Tables']['bookings']['Insert'], 'id' | 'created_at' | 'user_id' | 'status' | 'is_instant'>;
+type NewBooking = Database['public']['Tables']['bookings']['Row'];
+
+interface CreateBookingArgs {
+  bookingData: BookingData;
+  isInstant: boolean;
 }
 
 export const useBookings = () => {
@@ -17,7 +18,7 @@ export const useBookings = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const createBooking = useCallback(async (bookingData: BookingData) => {
+  const createBooking = useCallback(async ({ bookingData, isInstant }: CreateBookingArgs): Promise<NewBooking | null> => {
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -29,14 +30,13 @@ export const useBookings = () => {
 
     setLoading(true);
     try {
-      console.log('Creating booking with data:', bookingData);
-      
       const { data, error } = await supabase
         .from('bookings')
         .insert({
           ...bookingData,
           user_id: user.id,
-          status: 'pending'
+          status: isInstant ? 'confirmed' : 'pending',
+          is_instant: isInstant
         })
         .select()
         .single();
@@ -45,12 +45,12 @@ export const useBookings = () => {
         console.error('Booking creation error:', error);
         throw error;
       }
-
-      console.log('Booking created successfully:', data);
       
       toast({
-        title: "Booking Requested",
-        description: "Your booking request has been submitted and is pending host approval.",
+        title: isInstant ? "Booking Confirmed!" : "Booking Requested",
+        description: isInstant 
+          ? "Your booking is confirmed. Get ready for your trip!"
+          : "Your booking request has been submitted and is pending host approval.",
       });
 
       return data;

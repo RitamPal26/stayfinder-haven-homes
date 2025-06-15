@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MapPin, Star, Users, Wifi, Car, Coffee, Eye } from 'lucide-react';
+import { Heart, MapPin, Star, Users, Wifi, Car, Coffee, Eye, Bolt } from 'lucide-react';
 import { OptimizedImage } from '@/components/ui/optimized-image';
 
 interface Property {
@@ -92,8 +91,9 @@ export const PropertyCard = ({
         {/* Floating Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           {property.instant_book && (
-            <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white text-xs px-3 py-1 shadow-lg animate-pulse">
-              ⚡ Instant Book
+            <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white text-xs px-3 py-1 shadow-lg animate-pulse flex items-center gap-1">
+              <Bolt className="w-3 h-3" />
+              Instant Book
             </Badge>
           )}
           <Badge className="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs px-3 py-1 shadow-lg capitalize">
