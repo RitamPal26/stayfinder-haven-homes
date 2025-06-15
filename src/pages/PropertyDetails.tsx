@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +18,8 @@ import {
 import { OptimizedImage } from "@/components/ui/optimized-image";
 import { PropertyBooking } from "@/components/PropertyBooking";
 import { supabase } from '@/integrations/supabase/client';
+import { useTranslation } from "react-i18next";
+import { Currency as CurrencyComponent } from "@/components/ui/Currency";
 
 interface Listing {
   id: string;
@@ -100,6 +101,8 @@ const PropertyDetails = () => {
     );
   }
 
+  const { t } = useTranslation();
+
   const images = listing.images && listing.images.length > 0 
     ? listing.images 
     : ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop&crop=center'];
@@ -169,20 +172,20 @@ const PropertyDetails = () => {
             <div className="flex gap-6 mb-6">
               <div className="flex items-center gap-1">
                 <Users className="w-4 h-4" />
-                <span>{listing.max_guests} guests</span>
+                <span>{listing.max_guests} {t("guests")}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Bed className="w-4 h-4" />
-                <span>{listing.bedrooms} bedrooms</span>
+                <span>{listing.bedrooms} {t("bedrooms")}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Bath className="w-4 h-4" />
-                <span>{listing.bathrooms} bathrooms</span>
+                <span>{listing.bathrooms} {t("bathrooms")}</span>
               </div>
             </div>
 
             <div className="mb-6">
-              <h3 className="font-semibold mb-2">Hosted by {listing.profiles?.username || 'Host'}</h3>
+              <h3 className="font-semibold mb-2">{t("hosted_by")} {listing.profiles?.username || 'Host'}</h3>
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                 <span className="text-sm">4.8 · 127 reviews</span>
@@ -190,7 +193,7 @@ const PropertyDetails = () => {
             </div>
 
             <div className="border-t pt-6">
-              <h3 className="font-semibold mb-3">About this place</h3>
+              <h3 className="font-semibold mb-3">{t("about_this_place")}</h3>
               <p className="text-gray-700 leading-relaxed">
                 {listing.description || 'This beautiful property offers a comfortable and memorable stay.'}
               </p>
@@ -198,7 +201,7 @@ const PropertyDetails = () => {
 
             {listing.amenities && listing.amenities.length > 0 && (
               <div className="border-t pt-6">
-                <h3 className="font-semibold mb-3">Amenities</h3>
+                <h3 className="font-semibold mb-3">{t("amenities")}</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {listing.amenities.map((amenity, index) => {
                     const IconComponent = amenityIcons[amenity as keyof typeof amenityIcons] || Coffee;
@@ -217,13 +220,19 @@ const PropertyDetails = () => {
 
         {/* Booking Card */}
         <div className="lg:col-span-1">
-          <PropertyBooking
-            listingId={listing.id}
-            pricePerNight={listing.price_per_night}
-            cleaningFee={listing.cleaning_fee}
-            maxGuests={listing.max_guests}
-            instantBook={listing.instant_book ?? false}
-          />
+          <div className="p-4 border rounded-lg space-y-4 bg-white shadow">
+            <div className="flex items-end gap-2">
+              <CurrencyComponent amount={listing.price_per_night} className="text-2xl font-bold" />
+              <span className="ml-1 text-gray-600">{t("price_per_night")}</span>
+            </div>
+            <PropertyBooking
+              listingId={listing.id}
+              pricePerNight={listing.price_per_night}
+              cleaningFee={listing.cleaning_fee}
+              maxGuests={listing.max_guests}
+              instantBook={listing.instant_book ?? false}
+            />
+          </div>
         </div>
       </div>
     </div>

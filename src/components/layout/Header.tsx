@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Home, Heart, User, LogOut, Menu, PlusCircle } from 'lucide-react';
+import { LanguageCurrencySelector } from './LanguageCurrencySelector';
 
 const Header = () => {
   const { user, signOut, loading } = useAuth();
@@ -24,7 +25,6 @@ const Header = () => {
             <Home className="h-8 w-8 text-[#FF5A5F]" />
             <span className="text-xl font-bold text-gray-900">StayHere</span>
           </Link>
-
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link 
@@ -52,7 +52,8 @@ const Header = () => {
               </>
             )}
           </nav>
-
+          {/* Language & Currency Selector */}
+          <LanguageCurrencySelector />
           {/* User Menu */}
           <div className="flex items-center space-x-4">
             {!loading && (

@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Heart, MapPin, Star, Users, Wifi, Car, Coffee, Eye, Bolt } from 'lucide-react';
 import { OptimizedImage } from '@/components/ui/optimized-image';
+import { Currency as CurrencyComponent } from "@/components/ui/Currency";
+import { useTranslation } from "react-i18next";
 
 interface Property {
   id: string;
@@ -50,6 +52,7 @@ export const PropertyCard = ({
   className = ""
 }: PropertyCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const { t } = useTranslation();
 
   const truncateText = (text: string, maxLength: number) => {
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
@@ -118,9 +121,9 @@ export const PropertyCard = ({
 
       <CardContent className="p-5 flex-1 flex flex-col relative">
         {/* Price Badge */}
-        <div className="absolute -top-4 right-4 bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white px-4 py-2 rounded-full shadow-lg">
-          <span className="text-lg font-bold">${property.price_per_night}</span>
-          <span className="text-sm opacity-90"> / night</span>
+        <div className="absolute -top-4 right-4 bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+          <CurrencyComponent amount={property.price_per_night} />
+          <span className="text-sm opacity-90">/ {t("price_per_night")}</span>
         </div>
 
         <div className="flex-1 space-y-4 pt-2">

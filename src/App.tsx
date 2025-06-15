@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -17,6 +18,9 @@ import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import { I18nextProvider } from "react-i18next";
+import i18n from "@/i18n";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,59 +40,63 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <PerformanceMonitor />
-            <AuthProvider>
-              <AnalyticsProvider>
-                <EnvironmentBanner />
-                <SkipLink href="#main-content">Skip to main content</SkipLink>
-                <Header />
-                <div id="main-content">
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route 
-                      path="/search" 
-                      element={
-                        <LazyComponentWrapper>
-                          <LazySearchResults />
-                        </LazyComponentWrapper>
-                      } 
-                    />
-                    <Route 
-                      path="/property/:id" 
-                      element={
-                        <LazyComponentWrapper>
-                          <LazyPropertyDetails />
-                        </LazyComponentWrapper>
-                      } 
-                    />
-                    <Route 
-                      path="/favorites" 
-                      element={
-                        <ProtectedRoute>
-                          <LazyComponentWrapper>
-                            <LazyFavoritesPage />
-                          </LazyComponentWrapper>
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/host" 
-                      element={
-                        <ProtectedRoute>
-                          <LazyComponentWrapper>
-                            <LazyHostDashboard />
-                          </LazyComponentWrapper>
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </div>
-              </AnalyticsProvider>
-            </AuthProvider>
-          </BrowserRouter>
+          <I18nextProvider i18n={i18n}>
+            <CurrencyProvider>
+              <BrowserRouter>
+                <PerformanceMonitor />
+                <AuthProvider>
+                  <AnalyticsProvider>
+                    <EnvironmentBanner />
+                    <SkipLink href="#main-content">Skip to main content</SkipLink>
+                    <Header />
+                    <div id="main-content">
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/auth" element={<Auth />} />
+                        <Route 
+                          path="/search" 
+                          element={
+                            <LazyComponentWrapper>
+                              <LazySearchResults />
+                            </LazyComponentWrapper>
+                          } 
+                        />
+                        <Route 
+                          path="/property/:id" 
+                          element={
+                            <LazyComponentWrapper>
+                              <LazyPropertyDetails />
+                            </LazyComponentWrapper>
+                          } 
+                        />
+                        <Route 
+                          path="/favorites" 
+                          element={
+                            <ProtectedRoute>
+                              <LazyComponentWrapper>
+                                <LazyFavoritesPage />
+                              </LazyComponentWrapper>
+                            </ProtectedRoute>
+                          } 
+                        />
+                        <Route 
+                          path="/host" 
+                          element={
+                            <ProtectedRoute>
+                              <LazyComponentWrapper>
+                                <LazyHostDashboard />
+                              </LazyComponentWrapper>
+                            </ProtectedRoute>
+                          } 
+                        />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </div>
+                  </AnalyticsProvider>
+                </AuthProvider>
+              </BrowserRouter>
+            </CurrencyProvider>
+          </I18nextProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </HelmetProvider>
