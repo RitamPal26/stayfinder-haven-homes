@@ -221,6 +221,7 @@ const PropertyDetails = () => {
             pricePerNight={listing.price_per_night}
             cleaningFee={listing.cleaning_fee}
             maxGuests={listing.max_guests}
+            instantBook={listing.instant_book ?? false}
           />
         </div>
       </div>
